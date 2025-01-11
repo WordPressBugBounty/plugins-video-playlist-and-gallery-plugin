@@ -2,7 +2,7 @@
 Contributors: nicashmu
 Tags: cincopa, responsive, photos, video, html5, slideshow, images, podcast, video portal, gallery, media, admin, post, WPtouch, photo-albums, pictures, widget, photo, picture, video hosting, s3, music, playlists, playlist, sidebar, ajax, video, vidavee, iphone, cms, ipod, smooth gallery, nextgen, javascript, embed, menus, analytics, media library, itunes, mu, podpress, lightbox, podpress, flowplayer, jw player, comments, twitter, page, google, links, image
 Requires at least: 2.0.2
-Tested up to: 6.4.4
+Tested up to: 6.6.1
 Stable tag: 1.163
 
 Post your videos, photo galleries, slideshows, music and playlists easily and in seconds.
