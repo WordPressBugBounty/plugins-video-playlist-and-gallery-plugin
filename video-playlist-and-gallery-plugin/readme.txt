@@ -1,9 +1,11 @@
 === Cincopa video and media plug-in ===
 Contributors: nicashmu
-Tags: cincopa, responsive, photos, video, html5, slideshow, images, podcast, video portal, gallery, media, admin, post, WPtouch, photo-albums, pictures, widget, photo, picture, video hosting, s3, music, playlists, playlist, sidebar, ajax, video, vidavee, iphone, cms, ipod, smooth gallery, nextgen, javascript, embed, menus, analytics, media library, itunes, mu, podpress, lightbox, podpress, flowplayer, jw player, comments, twitter, page, google, links, image
-Requires at least: 2.0.2
-Tested up to: 6.6.1
-Stable tag: 1.163
+Tags: gallery, slideshow, media, video, photos
+Requires at least: 5.0
+Tested up to: 7.0
+Stable tag: 1.165
+License: GPLv2 or later
+License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
 Post your videos, photo galleries, slideshows, music and playlists easily and in seconds.
 

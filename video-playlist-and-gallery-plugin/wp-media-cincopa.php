@@ -1,18 +1,24 @@
 <?php
+// phpcs:disable WordPress.WP.I18n.MismatchedTextDomain, WordPress.Security.EscapeOutput.OutputNotEscaped
+if (!defined('ABSPATH')) {
+	exit;
+}
 /*
 Plugin Name: Cincopa video and media plug-in
 Plugin URI: https://www.cincopa.com/media-platform/wordpress-plugin.aspx
 Description: Post rich videos and photos galleries from your cincopa account
 Author: Cincopa 
-Version: 1.163
+Version: 1.165
 Text Domain: cincopa-video-and-media
+License: GPLv2 or later
+License URI: https://www.gnu.org/licenses/gpl-2.0.html
 */
 
-require_once dirname( __FILE__ ) . '/class-tgm-plugin-activation.php';
+require_once dirname(__FILE__) . '/class-tgm-plugin-activation.php';
 
 function cincopa_mp_plugin_ver()
 {
-	return 'wp1.163';
+	return 'wp1.165';
 }
 
 function cincopa_mp_url()
@@ -20,7 +26,9 @@ function cincopa_mp_url()
 	return '//www.cincopa.com';
 }
 
-if (strpos($_SERVER['REQUEST_URI'], 'media-upload.php') && strpos($_SERVER['REQUEST_URI'], '&type=cincopa') && !strpos($_SERVER['REQUEST_URI'], '&wrt=')) {
+$request_uri = isset($_SERVER['REQUEST_URI']) ? wp_unslash($_SERVER['REQUEST_URI']) : '';
+$request_uri = esc_url_raw($request_uri);
+if (strpos($request_uri, 'media-upload.php') && strpos($request_uri, '&type=cincopa') && !strpos($request_uri, '&wrt=')) {
 	header('Location: ' . cincopa_mp_url() . '/media-platform/start.aspx?utm_source=wpplugin&utm_medium=whatever&utm_campaign=' . cincopa_mp_plugin_ver() . '&rdt=' . urlencode(cincopa_mp_selfURL()));
 	exit;
 }
@@ -32,24 +40,39 @@ function cincopa_mp_mt_get_authorize_url()
 
 function cincopa_mp_selfURL()
 {
-	$s = empty($_SERVER["HTTPS"]) ? '' : (($_SERVER["HTTPS"] == "on") ? "s" : "");
+	$https = isset($_SERVER['HTTPS']) ? wp_unslash($_SERVER['HTTPS']) : '';
+	$https = sanitize_text_field($https);
+	$s = empty($https) ? '' : (($https == "on") ? "s" : "");
 
-	$protocol =  strtolower($_SERVER["SERVER_PROTOCOL"]);
-	$protocol =  substr($protocol, 0, strpos($protocol, "/"));
+	$server_protocol = isset($_SERVER['SERVER_PROTOCOL']) ? wp_unslash($_SERVER['SERVER_PROTOCOL']) : 'HTTP/1.1';
+	$server_protocol = sanitize_text_field($server_protocol);
+	$protocol = strtolower($server_protocol);
+	$protocol = substr($protocol, 0, strpos($protocol, "/"));
 	$protocol .= $s;
 
-	$port = ($_SERVER["SERVER_PORT"] == "80") ? "" : (":" . $_SERVER["SERVER_PORT"]);
-	$ret = $protocol . "://" . $_SERVER['SERVER_NAME'] . $port . $_SERVER['REQUEST_URI'];
+	$server_port = isset($_SERVER['SERVER_PORT']) ? wp_unslash($_SERVER['SERVER_PORT']) : '80';
+	$server_port = sanitize_text_field($server_port);
+	$port = ($server_port == "80") ? "" : (":" . $server_port);
+
+	$server_name = isset($_SERVER['SERVER_NAME']) ? wp_unslash($_SERVER['SERVER_NAME']) : '';
+	$server_name = sanitize_text_field($server_name);
+	$request_uri = isset($_SERVER['REQUEST_URI']) ? wp_unslash($_SERVER['REQUEST_URI']) : '';
+	$request_uri = esc_url_raw($request_uri);
+	$ret = $protocol . "://" . $server_name . $port . $request_uri;
 
 	return $ret;
 }
 
 function cincopa_mp_pluginURI()
 {
-	$s = empty($_SERVER["HTTPS"]) ? '' : (($_SERVER["HTTPS"] == "on") ? "s" : "");
+	$https = isset($_SERVER['HTTPS']) ? wp_unslash($_SERVER['HTTPS']) : '';
+	$https = sanitize_text_field($https);
+	$s = empty($https) ? '' : (($https == "on") ? "s" : "");
 
-	$protocol =  strtolower($_SERVER["SERVER_PROTOCOL"]);
-	$protocol =  substr($protocol, 0, strpos($protocol, "/"));
+	$server_protocol = isset($_SERVER['SERVER_PROTOCOL']) ? wp_unslash($_SERVER['SERVER_PROTOCOL']) : 'HTTP/1.1';
+	$server_protocol = sanitize_text_field($server_protocol);
+	$protocol = strtolower($server_protocol);
+	$protocol = substr($protocol, 0, strpos($protocol, "/"));
 	$protocol .= $s;
 
 	$url = site_url('', $protocol);
@@ -69,7 +92,7 @@ function cincopa_mp_WpMediaCincopa_init() // constructor
 
 function cincopa_mp_media_menu($tabs)
 {
-	$newtab = array('cincopabox' => __('Insert Media from Cincopa', 'cincopa'));
+	$newtab = array('cincopabox' => __('Insert Media from Cincopa', 'cincopa-video-and-media'));
 	return array_merge($tabs, $newtab);
 }
 
@@ -87,25 +110,26 @@ function cincopap_mp_addMediaButton($admin = true)
 	if (!$token) {
 		$token = get_user_meta(get_current_user_id(), 'cincopa_cp_mt_api_token', true);
 	}
-	
-?>
+
+	?>
 	<div id="cincopa_button">
-		
-		<?php if($token) { ?>
+
+		<?php if ($token) { ?>
 			<a class="cp-show-library button" title="Insert from Cincopa">Insert from Cincopa</a>
-			<div class="cincopa-gallery-block"><img src="<?php echo (esc_html(cincopa_mp_pluginURI())); ?>/loading.gif"></div>
-		<?php }else{ ?>
-			<a href="<?php echo cincopa_mp_mt_get_authorize_url(); ?>" class="cp-login-cincopa button" title="Login to Cincopa">Login to Cincopa</a>
+			<div class="cincopa-gallery-block"><img src="<?php echo esc_url(cincopa_mp_pluginURI()); ?>/loading.gif"></div>
+		<?php } else { ?>
+			<a href="<?php echo esc_url(cincopa_mp_mt_get_authorize_url()); ?>" class="cp-login-cincopa button"
+				title="Login to Cincopa">Login to Cincopa</a>
 		<?php } ?>
 	</div>
-	
-<?php
+
+	<?php
 }
 
 function cincopa_mp_modifyMediaTab($tabs)
 {
 	return array(
-		'cincopa' =>  __('Cincopa photo', 'wp-media-cincopa'),
+		'cincopa' => __('Cincopa photo', 'cincopa-video-and-media'),
 	);
 }
 
@@ -119,7 +143,7 @@ function cincopa_mp_media_upload_type_cincopa()
 {
 	global $wpdb, $wp_query, $wp_locale, $type, $tab, $post_mime_types;
 	add_filter('media_upload_tabs', 'cincopa_mp_modifyMediaTab');
-?>
+	?>
 
 	<br />
 	<br />
@@ -139,7 +163,7 @@ function cincopa_mp_media_upload_type_cincopa()
 		window.onload = cincopa_mp_cincopa_stub;
 	</script>
 
-<?php
+	<?php
 }
 
 cincopa_mp_WpMediaCincopa_init();
@@ -150,39 +174,51 @@ define("CINCOPA_REGEXP", "/\[cincopa([^\]]*)\]/");
 
 
 define('DEFAULT_TEMPLATES', array(
-	'video' =>'A4HAcLOLOO68',
-	'audio'=> 'AEFALSr3trK4',
-	'image'=>'A4IA-RbWMFlu', //'A8AAFV8a-H5b',
-	'unknown'=> 'AYFACCtYYllw'));
+	'video' => 'A4HAcLOLOO68',
+	'audio' => 'AEFALSr3trK4',
+	'image' => 'A4IA-RbWMFlu', //'A8AAFV8a-H5b',
+	'unknown' => 'AYFACCtYYllw'
+));
 
-
-function cincopa_mp_cincopa_tag($fid)
-{
-	return cincopa_mp_plugin_callback(array($fid));
-}
 
 function cincopa_mp_plugin_callback($match, $fromShortcodeCallback = false)
 {
-	$fid = $fromShortcodeCallback ? $match[0] : $match[1];
+	$fid = $fromShortcodeCallback ? $match[0] : (isset($match[1]) ? $match[1] : $match[0]);
 	$fid = trim($fid);
-	$uni =  str_replace(['@', '!'], '_', $fid); //uniqid(''); 
-	if (isset($match[1]) && strpos($match[1], 'cincopawidget') > -1) {
-		$uni .= '_' . $match[1];
+	$fid = preg_replace('/[^A-Za-z0-9_@!-]/', '', $fid);
+
+	$uni = str_replace(['@', '!'], '_', $fid);
+	if (isset($match[1]) && is_string($match[1]) && strpos($match[1], 'cincopawidget') > -1) {
+		$uni .= '_' . preg_replace('/[^A-Za-z0-9_@!-]/', '', $match[1]);
 	}
 
-	$uni .= '_' . md5(uniqid(rand(), true));
+	$uni .= '_' . md5(uniqid(wp_rand(), true));
+	wp_enqueue_script('cincopa-libasync', '//rtcdn.cincopa.com/libasync.js', array(), null, true);
+	$inline_script = '
+/* PLEASE CHANGE DEFAULT EXCERPT HANDLING TO CLEAN OR FULL (go to your Wordpress Dashboard/Settings/Cincopa Options ... */
+(function() {
+	var el = document.getElementById("cp_widget_' . esc_js($uni) . '");
+	if (el && !el.classList.contains("cp-gallery-activated")) {
+		el.classList.add("cp-gallery-activated");
+		var loadWidget = function() {
+			if (typeof cp_load_widget !== "undefined") {
+				cp_load_widget("' . esc_js(urlencode($fid)) . '", "cp_widget_' . esc_js($uni) . '");
+			} else {
+				setTimeout(loadWidget, 50);
+			}
+		};
+		loadWidget();
+	}
+})();
+';
+	wp_add_inline_script('cincopa-libasync', $inline_script);
+
 	// don't remove it. used for open graph generation
-	$ret = sprintf('<!-- %s -->', $match[0]);
-	wp_enqueue_script('libasyncjs', '//rtcdn.cincopa.com/libasync.js');
+	$ret = sprintf('<!-- %s -->', esc_html($match[0]));
 	$ret .= '
 <!-- Cincopa WordPress plugin ' . cincopa_mp_plugin_ver() . ': //www.cincopa.com/media-platform/wordpress-plugin.aspx -->
-<div id="cp_widget_' . $uni . '"><img src="//www.cincopa.com/media-platform/runtime/loading.gif" style="border:0;" alt="Cincopa WordPress plugin" /></div>
-<script type="text/javascript">
-/* PLEASE CHANGE DEFAULT EXCERPT HANDLING TO CLEAN OR FULL (go to your Wordpress Dashboard/Settings/Cincopa Options ... */
-// cp_load_widget("' . urlencode($fid) . '", "cp_widget_' . $uni . '");
-</script>
+<div id="cp_widget_' . esc_attr($uni) . '" class="cincopa-fid-' . esc_attr($fid) . '"><img src="//www.cincopa.com/media-platform/runtime/loading.gif" style="border:0;" alt="Cincopa WordPress plugin" /></div>
 ';
-	wp_add_inline_script('libasyncjs', 'cp_load_widget("' . urlencode($fid) . '", "cp_widget_' . $uni . '")');
 	//$ret .= '<noscript>Powered by Cincopa Video Hosting.<br>';
 	//$ret .= '</noscript>';
 
@@ -192,24 +228,36 @@ function cincopa_mp_plugin_callback($match, $fromShortcodeCallback = false)
 function cincopa_mp_async_plugin_callback($match, $fromShortcodeCallback = false)
 {
 	//$fid = trim($match[1]);
-	$fid = $fromShortcodeCallback ? $match[0] : $match[1];
+	$fid = $fromShortcodeCallback ? $match[0] : (isset($match[1]) ? $match[1] : $match[0]);
 	$fid = trim($fid);
-	$uni =  str_replace(['@', '!'], '_', $fid); //uniqid(''); 
-	if (isset($match[1]) && strpos($match[1], 'cincopawidget') > -1) {
-		$uni .= '_' . $match[1];
+	$fid = preg_replace('/[^A-Za-z0-9_@!-]/', '', $fid);
+
+	$uni = str_replace(['@', '!'], '_', $fid);
+	if (isset($match[1]) && is_string($match[1]) && strpos($match[1], 'cincopawidget') > -1) {
+		$uni .= '_' . preg_replace('/[^A-Za-z0-9_@!-]/', '', $match[1]);
 	}
 
-	$uni .= '_' . md5(uniqid(rand(), true));
+	$uni .= '_' . md5(uniqid(wp_rand(), true));
 
+	$script_url = '//rtcdn.cincopa.com/meta_json.aspx?fid=' . urlencode($fid) . '&ver=v2&id=cincopa_' . urlencode($uni);
 	$ret = '
 <!-- Cincopa WordPress plugin ' . cincopa_mp_plugin_ver() . ' (async engine): //www.cincopa.com/media-platform/wordpress-plugin.aspx -->
-<div id="cincopa_' . urlencode($uni) . '" class="gallerydemo cincopa-fadein"><div style="width: 100%; height: auto; max-width: 100%;"><img class="cincopa-thumbnail" src="https://rtcdn.cincopa.com/thumb.aspx?fid=' . urlencode($fid) . '&size=medium" style="filter:blur(5px);heiXght:100%;object-fit:contain;width:100%;" onload="this.parentNode ? this.parentNode.style.opacity=1 : \'\'" /></div></div>
-<script src="//rtcdn.cincopa.com/meta_json.aspx?fid=' . urlencode($fid) . '&ver=v2&id=cincopa_' . urlencode($uni) . '" type="text/javascript"></script>
+<div id="cincopa_' . esc_attr(urlencode($uni)) . '" class="gallerydemo cincopa-fadein cincopa-fid-' . esc_attr($fid) . '"><div style="width: 100%; height: auto; max-width: 100%;"><img class="cincopa-thumbnail" src="' . esc_url('https://rtcdn.cincopa.com/thumb.aspx?fid=' . urlencode($fid) . '&size=medium') . '" style="filter:blur(5px);heiXght:100%;object-fit:contain;width:100%;" onload="this.parentNode ? this.parentNode.style.opacity=1 : \'\'" /></div></div>
+<script type="text/javascript">
+(function() {
+	var el = document.getElementById("cincopa_' . esc_js(urlencode($uni)) . '");
+	if (el && !el.classList.contains("cp-gallery-activated")) {
+		el.classList.add("cp-gallery-activated");
+		var s = document.createElement("script");
+		s.src = "' . esc_url_raw($script_url) . '";
+		s.type = "text/javascript";
+		document.getElementsByTagName("head")[0].appendChild(s);
+	}
+})();
+</script>
 ';
 
 	wp_enqueue_script('libasyncjs', '//rtcdn.cincopa.com/libasync.js');
-
-
 
 	return $ret;
 }
@@ -217,9 +265,10 @@ function cincopa_mp_async_plugin_callback($match, $fromShortcodeCallback = false
 
 function cincopa_mp_feed_plugin_callback($match, $fromShortcodeCallback = false)
 {
-	$fid = $fromShortcodeCallback ? $match[0] : $match[1];
+	$fid = $fromShortcodeCallback ? $match[0] : (isset($match[1]) ? $match[1] : $match[0]);
 	$fid = trim($fid);
-	$ret = '<img style="border:0;" src="//www.cincopa.com/media-platform/api/thumb.aspx?fid=' . urlencode($fid) . '&size=large" />';
+	$fid = preg_replace('/[^A-Za-z0-9_@!-]/', '', $fid);
+	$ret = '<img style="border:0;" src="//www.cincopa.com/media-platform/api/thumb.aspx?fid=' . esc_attr(urlencode($fid)) . '&size=large" />';
 
 	return $ret;
 }
@@ -232,12 +281,14 @@ function cincopa_mp_plugin($content)
 	$cincopa_rss = get_site_option('CincopaRss');
 
 	$cincopa_async = get_site_option('CincopaAsync');
-	if (strpos($_SERVER['REQUEST_URI'], 'tcapc=true'))
+	$request_uri = isset($_SERVER['REQUEST_URI']) ? wp_unslash($_SERVER['REQUEST_URI']) : '';
+	$request_uri = esc_url_raw($request_uri);
+	if (strpos($request_uri, 'tcapc=true'))
 		$cincopa_async = 'async';
-	else if (strpos($_SERVER['REQUEST_URI'], 'tcapc=false'))
+	else if (strpos($request_uri, 'tcapc=false'))
 		$cincopa_async = 'plain';
 
-	if (strpos($_SERVER['REQUEST_URI'], 'cpdisable=true'))
+	if (strpos($request_uri, 'cpdisable=true'))
 		return $content;
 
 	$cincopa_excerpt_rt = get_site_option('CincopaExcerpt');
@@ -269,9 +320,11 @@ function cincopa_mp_plugin_rss($content)
 	$cincopa_rss = get_site_option('CincopaRss');
 
 	$cincopa_async = get_site_option('CincopaAsync');
-	if (strpos($_SERVER['REQUEST_URI'], 'tcapc=true'))
+	$request_uri = isset($_SERVER['REQUEST_URI']) ? wp_unslash($_SERVER['REQUEST_URI']) : '';
+	$request_uri = esc_url_raw($request_uri);
+	if (strpos($request_uri, 'tcapc=true'))
 		$cincopa_async = 'async';
-	else if (strpos($_SERVER['REQUEST_URI'], 'tcapc=false'))
+	else if (strpos($request_uri, 'tcapc=false'))
 		$cincopa_async = 'plain';
 
 	if ($cincopa_rss == 'full') {
@@ -294,12 +347,14 @@ function cincopa_plugin_shortcode($atts, $content, $tag)
 	$cincopa_rss = get_site_option('CincopaRss');
 
 	$cincopa_async = get_site_option('CincopaAsync');
-	if (strpos($_SERVER['REQUEST_URI'], 'tcapc=true'))
+	$request_uri = isset($_SERVER['REQUEST_URI']) ? wp_unslash($_SERVER['REQUEST_URI']) : '';
+	$request_uri = esc_url_raw($request_uri);
+	if (strpos($request_uri, 'tcapc=true'))
 		$cincopa_async = 'async';
-	else if (strpos($_SERVER['REQUEST_URI'], 'tcapc=false'))
+	else if (strpos($request_uri, 'tcapc=false'))
 		$cincopa_async = 'plain';
 
-	if (strpos($_SERVER['REQUEST_URI'], 'cpdisable=true'))
+	if (strpos($request_uri, 'cpdisable=true'))
 		return $content;
 
 	$cincopa_excerpt_rt = get_site_option('CincopaExcerpt');
@@ -418,18 +473,20 @@ function cincopa_mp_opengraph_add_prefix($output)
 function cincopa_mp_opengraph_meta_tags_callback($match, $fromShortcodeCallback = false)
 {
 	global $opengraph_meta;
-	$fid = $fromShortcodeCallback ? $match[0] : $match[1];
+	$fid = $fromShortcodeCallback ? $match[0] : (isset($match[1]) ? $match[1] : $match[0]);
+	if (empty($fid))
+		return '';
+
+	$fid = trim($fid);
+	$fid = preg_replace('/[^A-Za-z0-9_@!-]/', '', $fid);
 	if (empty($fid))
 		return '';
 
 	$opengraph_meta_item =
-		'<meta property="og:image" content="//www.cincopa.com/media-platform/api/thumb_open.aspx?fid=' . urlencode(trim($fid)) . '&size=large">' . "\n" .
-		'<meta name="twitter:image" content="//www.cincopa.com/media-platform/api/thumb_open.aspx?fid=' . urlencode(trim($fid)) . '&size=large">' . "\n";
-	if (count($match) > 1) {
-		$opengraph_meta[trim($match[1])] = $opengraph_meta_item;
-	} else {
-		$opengraph_meta[trim($match[0])] = $opengraph_meta_item;
-	}
+		'<meta property="og:image" content="//www.cincopa.com/media-platform/api/thumb_open.aspx?fid=' . esc_attr(urlencode($fid)) . '&size=large">' . "\n" .
+		'<meta name="twitter:image" content="//www.cincopa.com/media-platform/api/thumb_open.aspx?fid=' . esc_attr(urlencode($fid)) . '&size=large">' . "\n";
+
+	$opengraph_meta[$fid] = $opengraph_meta_item;
 }
 function cincopa_mp_opengraph_placeholder()
 {
@@ -463,18 +520,24 @@ function cincopa_mp_register_script()
 		// $elementor_edit_active = \Elementor\Plugin::$instance->editor->is_edit_mode();
 
 		/* detect WPBakery Page Builder */
-		function is_WPBakery_build() {
-			return function_exists( 'vc_is_inline' ) && vc_is_inline() ? true : false;
+		function is_WPBakery_build()
+		{
+			return function_exists('vc_is_inline') && vc_is_inline() ? true : false;
 		}
 
 		/* detect preview/editor mode in Elementor */
-		$current_url = $_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
+		$http_host = isset($_SERVER['HTTP_HOST']) ? wp_unslash($_SERVER['HTTP_HOST']) : '';
+		$http_host = sanitize_text_field($http_host);
+		$request_uri = isset($_SERVER['REQUEST_URI']) ? wp_unslash($_SERVER['REQUEST_URI']) : '';
+		$request_uri = esc_url_raw($request_uri);
+		$current_url = $http_host . $request_uri;
 		$elementor_active = strpos($current_url, 'action=elementor');
 
-		function cincopa_elementor_frontend_scripts() {
+		function cincopa_elementor_frontend_scripts()
+		{
 			$token = get_site_option('cincopa_cp_mt_api_token');
-			$cincopa_templates =get_site_option('CincopaTemplates');
-			if(!$cincopa_templates){
+			$cincopa_templates = get_site_option('CincopaTemplates');
+			if (!$cincopa_templates) {
 				$cincopa_templates = DEFAULT_TEMPLATES;
 			}
 
@@ -497,7 +560,8 @@ function cincopa_mp_register_script()
 			wp_enqueue_script('cincopa-script');
 		}
 
-		function cincopa_elementor_frontend_stylesheets(){
+		function cincopa_elementor_frontend_stylesheets()
+		{
 			wp_register_style('cincopa-style', plugins_url('css.cincopa.css', __FILE__), false, '20130425.4', 'all');
 			wp_enqueue_style('cincopa-style');
 		}
@@ -508,18 +572,19 @@ function cincopa_mp_register_script()
 			if ($elementor_active) {
 				add_action('elementor/editor/before_enqueue_scripts', 'cincopa_elementor_frontend_scripts');
 				add_action('elementor/editor/before_enqueue_styles', 'cincopa_elementor_frontend_stylesheets');
-			} else {	
+			} else {
 				cincopa_elementor_frontend_scripts();
 				cincopa_elementor_frontend_stylesheets();
-			}		
+			}
 		}
 	}
 }
 
-function add_cincopa_oembed_provider() {
-    wp_oembed_add_provider( '#https://([a-zA-Z0-9-]+\.)?cincopa\.com/.*#i', 'https://www.cincopa.com/media-platform/oembed.aspx', true );
+function add_cincopa_oembed_provider()
+{
+	wp_oembed_add_provider('#https://([a-zA-Z0-9-]+\.)?cincopa\.com/.*#i', 'https://www.cincopa.com/media-platform/oembed.aspx', true);
 }
-add_action( 'init', 'add_cincopa_oembed_provider' );
+add_action('init', 'add_cincopa_oembed_provider');
 
 /**
  * Check if Classic Editor plugin is active.
@@ -553,7 +618,7 @@ function cincopa_wpse_is_gutenberg_editor()
 	}
 
 	if (cincopa_is_classic_editor_plugin_active()) {
-		$editor_option       = get_option('classic-editor-replace');
+		$editor_option = get_option('classic-editor-replace');
 		$block_editor_active = array('no-replace', 'block');
 
 		return in_array($editor_option, $block_editor_active, true);
@@ -596,8 +661,8 @@ function cincopa_loadMyBlock()
 		$token = get_user_meta(get_current_user_id(), 'cincopa_cp_mt_api_token', true);
 	}
 
-	$cincopa_templates =get_site_option('CincopaTemplates');
-	if(!$cincopa_templates){
+	$cincopa_templates = get_site_option('CincopaTemplates');
+	if (!$cincopa_templates) {
 		$cincopa_templates = DEFAULT_TEMPLATES;
 	}
 
@@ -623,7 +688,7 @@ function cincopa_loadMyBlock()
 
 function cincopa_mp_isAdmin()
 {
-	return !function_exists('is_site_admin') || is_site_admin() == true;
+	return is_super_admin();
 }
 
 
@@ -644,8 +709,10 @@ function cincopa_mp_mt_setcookie()
 
 	if (sanitize_text_field(isset($_GET['page'])) && sanitize_text_field($_GET['page'] == 'cincopaoptions')) {
 
-		if (empty($_COOKIE["csrfToken"]))
-			setcookie('csrfToken', md5(uniqid(rand(), true)));
+		if (empty($_COOKIE["csrfToken"])) {
+			$csrf_token = md5(uniqid(wp_rand(), true));
+			setcookie('csrfToken', $csrf_token);
+		}
 	}
 }
 
@@ -657,7 +724,7 @@ function cincopa_mp_mt_options_page()
 
 	if (strpos($_SERVER['QUERY_STRING'], 'hide_note=welcome_notice')) {
 		update_site_option('cincopa_welcome_notice', cincopa_mp_plugin_ver());
-		echo "<script type=\"text/javascript\">	document.location.href = '" . $_SERVER['HTTP_REFERER'] . "'; </script>";
+		echo "<script type=\"text/javascript\">	document.location.href = '" . esc_url_raw($_SERVER['HTTP_REFERER']) . "'; </script>";
 		exit;
 	}
 
@@ -665,12 +732,12 @@ function cincopa_mp_mt_options_page()
 	$cincopa_async = get_site_option('CincopaAsync');
 	$cincopa_rss = get_site_option('CincopaRss');
 	$cincopa_opengraph = get_site_option('CincopaOpenGraph');
-	$cincopa_templates =get_site_option('CincopaTemplates');
+	$cincopa_templates = get_site_option('CincopaTemplates');
 
 
 
 
-	if(!$cincopa_templates){
+	if (!$cincopa_templates) {
 		$cincopa_templates = DEFAULT_TEMPLATES;
 	}
 
@@ -680,15 +747,21 @@ function cincopa_mp_mt_options_page()
 		$cincopa_opengraph = 1;
 	}
 
-	if (sanitize_text_field(isset($_POST['submit']))) {
+	if (isset($_POST['submit'])) {
 
 
-		if (!isset($_POST['cincopa-settings']) || !wp_verify_nonce($_POST['cincopa-settings'], 'cincopa-settings')) {
+		$settings_nonce = isset($_POST['cincopa-settings']) ? wp_unslash($_POST['cincopa-settings']) : '';
+		$settings_nonce = sanitize_key($settings_nonce);
+		if (empty($settings_nonce) || !wp_verify_nonce($settings_nonce, 'cincopa-settings')) {
 			echo "nope";
 			exit();
 		}
 
-		if (sanitize_text_field($_POST['csrfToken']) != $_COOKIE['csrfToken']) {
+		$post_csrf = isset($_POST['csrfToken']) ? wp_unslash($_POST['csrfToken']) : '';
+		$post_csrf = sanitize_text_field($post_csrf);
+		$cookie_csrf = isset($_COOKIE['csrfToken']) ? wp_unslash($_COOKIE['csrfToken']) : '';
+		$cookie_csrf = sanitize_text_field($cookie_csrf);
+		if ($post_csrf != $cookie_csrf) {
 			echo "nope";
 			exit();
 		}
@@ -721,19 +794,19 @@ function cincopa_mp_mt_options_page()
 
 		$cincopa_templates = DEFAULT_TEMPLATES;
 		if (sanitize_text_field(isset($_POST['cp_video_template']))) {
-			$cincopa_templates['video'] =  sanitize_text_field($_POST['cp_video_template']);
+			$cincopa_templates['video'] = sanitize_text_field($_POST['cp_video_template']);
 
 		}
 		if (sanitize_text_field(isset($_POST['cp_image_template']))) {
-			$cincopa_templates['image'] =  sanitize_text_field($_POST['cp_image_template']);
+			$cincopa_templates['image'] = sanitize_text_field($_POST['cp_image_template']);
 
 		}
 		if (sanitize_text_field(isset($_POST['cp_audio_template']))) {
-			$cincopa_templates['audio'] =  sanitize_text_field($_POST['cp_audio_template']);
+			$cincopa_templates['audio'] = sanitize_text_field($_POST['cp_audio_template']);
 
 		}
 		if (sanitize_text_field(isset($_POST['cp_unknown_template']))) {
-			$cincopa_templates['unknown'] =  sanitize_text_field($_POST['cp_unknown_template']);
+			$cincopa_templates['unknown'] = sanitize_text_field($_POST['cp_unknown_template']);
 		}
 
 		update_site_option('CincopaTemplates', $cincopa_templates);
@@ -758,19 +831,23 @@ function cincopa_mp_mt_options_page()
 
 	$disp_opengraph = ($cincopa_opengraph == 1) ? $tpl_checked : '';
 
-?>
+	?>
 	<div class="wrap">
 		<h2>Cincopa Configuration </h2>
 		<div class="postbox-container" style="clear: both;">
 			<div class="metabox-holder">
 				<div class="meta-box-sortables">
 					<form action="" method="post" id="cincopa-conf">
-						<?php $nonce = wp_create_nonce( 'cincopa-settings' ); ?>
+						<?php $nonce = wp_create_nonce('cincopa-settings'); ?>
 						<input type="hidden" name="cincopa-settings" value="<?php echo $nonce; ?>" />
 						<div class="handlediv" title="Click to toggle">
 
 						</div>
-						<input type="hidden" name="csrfToken" value="<?php echo (esc_html($_COOKIE['csrfToken'])); ?>" />
+						<?php
+						$cookie_csrf_token = isset($_COOKIE['csrfToken']) ? wp_unslash($_COOKIE['csrfToken']) : '';
+						$cookie_csrf_token = sanitize_text_field($cookie_csrf_token);
+						?>
+						<input type="hidden" name="csrfToken" value="<?php echo esc_attr($cookie_csrf_token); ?>" />
 						<div id="cincopa_settings" class="postbox">
 							<h3 class="hndle">
 								<span>Cincopa Settings</span>
@@ -782,20 +859,26 @@ function cincopa_mp_mt_options_page()
 									<tr style="width:100%;">
 										<th valign="top" scrope="row">
 											<label>
-												Excerpt Handling (<a target="_blank" href="//help.cincopa.com/entries/448859-wordpress-plugin-settings-page?utm_source=wpplugin&utm_medium=whatever&utm_campaign=#excerpt">what?</a>):
+												Excerpt Handling (<a target="_blank"
+													href="//help.cincopa.com/entries/448859-wordpress-plugin-settings-page?utm_source=wpplugin&utm_medium=whatever&utm_campaign=#excerpt">what?</a>):
 											</label>
 										</th>
 										<td valign="top">
-											<input type="radio" <?php echo (esc_html($disp_excerpt1)); ?> id="embedCustomization0" name="embedRel" value="nothing" />
+											<input type="radio" <?php echo (esc_html($disp_excerpt1)); ?>
+												id="embedCustomization0" name="embedRel" value="nothing" />
 											<label for="embedCustomization0">Do nothing (default Wordpress behavior)</label>
 											<br />
-											<input type="radio" <?php echo (esc_html($disp_excerpt2)); ?> id="embedCustomization1" name="embedRel" value="clean" />
+											<input type="radio" <?php echo (esc_html($disp_excerpt2)); ?>
+												id="embedCustomization1" name="embedRel" value="clean" />
 											<label for="embedCustomization1">Clean excerpt (do not show gallery)</label>
 											<br />
-											<input type="radio" <?php echo (esc_html($disp_excerpt4)); ?> id="embedCustomization3" name="embedRel" value="remove" />
-											<label for="embedCustomization3">Remove gallery (do not show gallery in all non post pages)</label>
+											<input type="radio" <?php echo (esc_html($disp_excerpt4)); ?>
+												id="embedCustomization3" name="embedRel" value="remove" />
+											<label for="embedCustomization3">Remove gallery (do not show gallery in all non
+												post pages)</label>
 											<br />
-											<input type="radio" <?php echo (esc_html($disp_excerpt3)); ?> id="embedCustomization2" name="embedRel" value="full" />
+											<input type="radio" <?php echo (esc_html($disp_excerpt3)); ?>
+												id="embedCustomization2" name="embedRel" value="full" />
 											<label for="embedCustomization2">Full excerpt (show gallery)</label>
 											<br />
 
@@ -805,11 +888,13 @@ function cincopa_mp_mt_options_page()
 									<tr>
 										<th valign="top" scrope="row">
 											<label for="open_graph">
-												Use Open Graph Tags? (<a target="_blank" href="//help.cincopa.com/entries/448859-wordpress-plugin-settings-page?utm_source=wpplugin&utm_medium=whatever&utm_campaign=#opengraph">what?</a>):
+												Use Open Graph Tags? (<a target="_blank"
+													href="//help.cincopa.com/entries/448859-wordpress-plugin-settings-page?utm_source=wpplugin&utm_medium=whatever&utm_campaign=#opengraph">what?</a>):
 											</label>
 										</th>
 										<td valign="top">
-											<input type="checkbox" <?php echo (esc_html($disp_opengraph)); ?> id="open_graph" name="open_graph" value="1" />
+											<input type="checkbox" <?php echo (esc_html($disp_opengraph)); ?>
+												id="open_graph" name="open_graph" value="1" />
 											<br />
 										</td>
 									</tr>
@@ -818,21 +903,24 @@ function cincopa_mp_mt_options_page()
 									<?php
 
 									if (cincopa_mp_isAdmin()) {
-									?>
+										?>
 
 
 										<tr style="width:100%;">
 											<th valign="top" scrope="row">
 												<label for="cincopaasync">
-													Async Engine (<a target="_blank" href="//help.cincopa.com/entries/448859-wordpress-plugin-settings-page?utm_source=wpplugin&utm_medium=whatever&utm_campaign=#async">what?</a>):
+													Async Engine (<a target="_blank"
+														href="//help.cincopa.com/entries/448859-wordpress-plugin-settings-page?utm_source=wpplugin&utm_medium=whatever&utm_campaign=#async">what?</a>):
 												</label>
 											</th>
 											<td valign="top">
 
-												<input type="radio" <?php echo (esc_html($disp_async1)); ?> id="asyncCustomization0" name="asyncRel" value="plain" />
+												<input type="radio" <?php echo (esc_html($disp_async1)); ?>
+													id="asyncCustomization0" name="asyncRel" value="plain" />
 												<label for="asyncCustomization0">Plain Sync</label>
 												<br />
-												<input type="radio" <?php echo (esc_html($disp_async2)); ?> id="asyncCustomization1" name="asyncRel" value="async" />
+												<input type="radio" <?php echo (esc_html($disp_async2)); ?>
+													id="asyncCustomization1" name="asyncRel" value="async" />
 												<label for="asyncCustomization1">Advanced Async </label>
 												<br />
 
@@ -843,15 +931,18 @@ function cincopa_mp_mt_options_page()
 										<tr style="width:100%;">
 											<th valign="top" scrope="row">
 												<label for="cincoparss">
-													RSS handling (<a target="_blank" href="//help.cincopa.com/entries/448859-wordpress-plugin-settings-page?utm_source=wpplugin&utm_medium=whatever&utm_campaign=#rsshandling">what?</a>):
+													RSS handling (<a target="_blank"
+														href="//help.cincopa.com/entries/448859-wordpress-plugin-settings-page?utm_source=wpplugin&utm_medium=whatever&utm_campaign=#rsshandling">what?</a>):
 												</label>
 											</th>
 											<td valign="top">
 
-												<input type="radio" <?php echo (esc_html($disp_rss1)); ?> id="rss0" name="rssRel" value="thumb" />
+												<input type="radio" <?php echo (esc_html($disp_rss1)); ?> id="rss0"
+													name="rssRel" value="thumb" />
 												<label for="rss0">Show thumbnail</label>
 												<br />
-												<input type="radio" <?php echo (esc_html($disp_rss2)); ?> id="rss1" name="rssRel" value="full" />
+												<input type="radio" <?php echo (esc_html($disp_rss2)); ?> id="rss1"
+													name="rssRel" value="full" />
 												<label for="rss1">Full gallery</label>
 												<br />
 
@@ -860,18 +951,24 @@ function cincopa_mp_mt_options_page()
 										</tr>
 
 										<tr class="rid-container">
-											<td valign="top" style="display: flex; flex-direction: column; gap: 6px; justify-content: flex-start; width:100%;">
+											<td valign="top"
+												style="display: flex; flex-direction: column; gap: 6px; justify-content: flex-start; width:100%;">
 												<label style="font-weight: 600;" for="cp_video_template">Video Template</label>
-												<input type="text"  id="cp_video_template" name="cp_video_template" value="<?php echo $cincopa_templates['video']; ?>" />
+												<input type="text" id="cp_video_template" name="cp_video_template"
+													value="<?php echo esc_attr($cincopa_templates['video']); ?>" />
 												<br />
 												<label style="font-weight: 600;" for="cp_video_template">Audio Template</label>
-												<input type="text"  id="cp_video_template" name="cp_image_template" value="<?php echo $cincopa_templates['image']; ?>" />
+												<input type="text" id="cp_video_template" name="cp_image_template"
+													value="<?php echo esc_attr($cincopa_templates['image']); ?>" />
 												<br />
 												<label style="font-weight: 600;" for="cp_video_template">Image Template</label>
-												<input type="text"  id="cp_video_template" name="cp_audio_template" value="<?php echo $cincopa_templates['audio']; ?>" />
+												<input type="text" id="cp_video_template" name="cp_audio_template"
+													value="<?php echo esc_attr($cincopa_templates['audio']); ?>" />
 												<br />
-												<label style="font-weight: 600;" for="cp_video_template">Non media Template</label>
-												<input type="text"  id="cp_video_template" name="cp_unknown_template" value="<?php echo $cincopa_templates['unknown']; ?>" />
+												<label style="font-weight: 600;" for="cp_video_template">Non media
+													Template</label>
+												<input type="text" id="cp_video_template" name="cp_unknown_template"
+													value="<?php echo esc_attr($cincopa_templates['unknown']); ?>" />
 												<br />
 
 
@@ -881,7 +978,7 @@ function cincopa_mp_mt_options_page()
 
 
 
-									<?php
+										<?php
 									}
 
 									?>
@@ -891,7 +988,10 @@ function cincopa_mp_mt_options_page()
 										<th valign="top" scrope="row" colspan=2>
 											Note:
 											<ol>
-												<li>Use this PHP code to add a gallery directly to your template : <br>&nbsp;&nbsp;&nbsp; <i>&lt;?php echo cincopa_mp_cincopa_tag("GALLERY ID"); ?&gt;</i></li>
+												<li>Use this PHP code to add a gallery directly to your template :
+													<br>&nbsp;&nbsp;&nbsp; <i>&lt;?php echo cincopa_mp_cincopa_tag("GALLERY
+														ID"); ?&gt;</i>
+												</li>
 											</ol>
 										</th>
 									</tr>
@@ -909,7 +1009,7 @@ function cincopa_mp_mt_options_page()
 		</div>
 
 	</div>
-<?php
+	<?php
 
 
 }
@@ -932,9 +1032,9 @@ function cincopa_mp_mt_token_handler()
 				delete_user_meta(get_current_user_id(), 'cincopa_cp_mt_api_token');
 			}
 		} else {
-			$token  =  sanitize_text_field($_POST['api_token']);
+			$token = sanitize_text_field($_POST['api_token']);
 			if (sanitize_text_field(isset($_POST['token_type']))) {
-				$token_type  = sanitize_text_field($_POST['token_type']);
+				$token_type = sanitize_text_field($_POST['token_type']);
 				if ($token_type == 'for_all') {
 					update_site_option('cincopa_cp_mt_api_token', $token);
 				} else {
@@ -948,9 +1048,11 @@ function cincopa_mp_mt_token_handler()
 		echo "<div id=\"updatemessage\" class=\"updated fade\"><p>Token saved for " . ($token_type == 'for_all' ? "all users" : "your account") . ".</p></div>\n";
 		echo "<script type=\"text/javascript\">setTimeout(function(){jQuery('#updatemessage').hide('slow');}, 3000);</script>";
 	} else {
-		if (!empty($_GET['api_token'])  && esc_html($_GET['api_token'])) {
+		$get_api_token = isset($_GET['api_token']) ? wp_unslash($_GET['api_token']) : '';
+		$get_api_token = sanitize_text_field($get_api_token);
+		if (!empty($get_api_token)) {
 			$return_from_auth = true;
-			$token = esc_html($_GET['api_token']);
+			$token = $get_api_token;
 		} else {
 			$token = get_site_option('cincopa_cp_mt_api_token');
 			if (!$token) {
@@ -959,17 +1061,17 @@ function cincopa_mp_mt_token_handler()
 		}
 	}
 
-	$api_token_for_all  = false;
-	if (get_site_option('cincopa_cp_mt_api_token') || (isset($_GET['api_token']) && !isset($_POST['token_type'])) ) {
+	$api_token_for_all = false;
+	if (get_site_option('cincopa_cp_mt_api_token') || (isset($_GET['api_token']) && !isset($_POST['token_type']))) {
 		$api_token_for_all = true;
 	}
 
-?>
+	?>
 	<script>
-		jQuery(document).ready(function($) {
-			var token = '<?php echo $token; ?>';
-			var tokenModeforAll = '<?php echo $api_token_for_all; ?>' ? true  : false;
-			if (token == 'not_authorized') {				
+		jQuery(document).ready(function ($) {
+			var token = '<?php echo esc_js($token); ?>';
+			var tokenModeforAll = '<?php echo $api_token_for_all; ?>' ? true : false;
+			if (token == 'not_authorized') {
 				badToken('not_authorized');
 				jQuery('#cincopa-token').show();
 				return;
@@ -977,10 +1079,10 @@ function cincopa_mp_mt_token_handler()
 			jQuery.ajax({
 				url: 'https://api.cincopa.com/v2/ping.json?api_token=' + token,
 				dataType: 'json',
-				success: function(data) {
+				success: function (data) {
 					if (data.success) {
-						if(data.permissions.indexOf('asset.*') == -1 &&  data.permissions.indexOf('gallery.*') == -1 ){
-							if ( (data.permissions.indexOf('asset.*') == -1 &&  data.permissions.indexOf('asset.read') == -1 || data.permissions.indexOf('asset.upload') == -1 ) || (data.permissions.indexOf('gallery.*') == -1 &&  data.permissions.indexOf('gallery.read') == -1) ) {
+						if (data.permissions.indexOf('asset.*') == -1 && data.permissions.indexOf('gallery.*') == -1) {
+							if ((data.permissions.indexOf('asset.*') == -1 && data.permissions.indexOf('asset.read') == -1 || data.permissions.indexOf('asset.upload') == -1) || (data.permissions.indexOf('gallery.*') == -1 && data.permissions.indexOf('gallery.read') == -1)) {
 								badToken('invalid');
 							}
 						}
@@ -988,7 +1090,7 @@ function cincopa_mp_mt_token_handler()
 						badToken('invalid');
 					}
 				},
-				error: function(err) {
+				error: function (err) {
 					var error;
 					try {
 						error = JSON.parse(err.responseText);
@@ -999,81 +1101,86 @@ function cincopa_mp_mt_token_handler()
 						badToken(error.message || 'invalid');
 					}
 				},
-				complete: function() {
+				complete: function () {
 					jQuery('#cincopa-token').show();
 				}
 			})
 
-			$('.cincopa_delete_token').on('click', function() {
+			$('.cincopa_delete_token').on('click', function () {
 				$('#cincopa-conf').append('<input type="hidden" name="delete_token" value="true" />');
 				$('input[type="submit"]').click()
 			})
 
 			function badToken(message) {
 				jQuery('.cincopa_token_status').html('Token status - ' + message);
-				if( $('.cincopa_token_issue_not_admin').length && tokenModeforAll ){
+				if ($('.cincopa_token_issue_not_admin').length && tokenModeforAll) {
 					$('.cincopa_token_issue_not_admin').show();
-				}else{
+				} else {
 					jQuery('.cincopa_create_token').show();
 				}
 				jQuery('.cincopa_delete_token').remove();
 			}
 		});
 	</script>
-		<div action="" method="post" id="cincopa-token" style="display:none; padding-bottom: 20px;border-bottom: 1px solid #eee;">
-			<input type="hidden" name="api_token" value="<?php echo $token ?>" />
-			<?php if (is_super_admin()) { ?>
+	<div action="" method="post" id="cincopa-token"
+		style="display:none; padding-bottom: 20px;border-bottom: 1px solid #eee;">
+		<input type="hidden" name="api_token" value="<?php echo esc_attr($token); ?>" />
+		<?php if (is_super_admin()) { ?>
 
-				<div class="inside" style="width:600px;padding: 0;margin-top: 0;">
-					<table class="form-table">
-						<tr style="width:100%;">
-							<th valign="top" scrope="row">
-								<label for="cincopaaccesstoken">
-									Cincopa access token:
-								</label>
-							</th>
-							<td valign="top">
-								<input type="radio" <?php echo $api_token_for_all ? 'checked' : '' ?> id="allowTokenUsers" name="token_type" value="for_all" />
-								<label for="allowTokenUsers">One token for all WordPress users</label>
-								<br />
-								<input type="radio" <?php echo !$api_token_for_all ? 'checked' : '' ?> id="allowTokenAdmin" name="token_type" value="for_user" />
-								<label for="allowTokenAdmin">Individual tokens for each WordPress user. (each user will need his own Cincopa account)</label>
-							</td>
-						</tr>
-					</table>
-				</div>
+			<div class="inside" style="width:600px;padding: 0;margin-top: 0;">
+				<table class="form-table">
+					<tr style="width:100%;">
+						<th valign="top" scrope="row">
+							<label for="cincopaaccesstoken">
+								Cincopa access token:
+							</label>
+						</th>
+						<td valign="top">
+							<input type="radio" <?php checked($api_token_for_all); ?> id="allowTokenUsers" name="token_type"
+								value="for_all" />
+							<label for="allowTokenUsers">One token for all WordPress users</label>
+							<br />
+							<input type="radio" <?php checked(!$api_token_for_all); ?> id="allowTokenAdmin" name="token_type"
+								value="for_user" />
+							<label for="allowTokenAdmin">Individual tokens for each WordPress user. (each user will need his own
+								Cincopa account)</label>
+						</td>
+					</tr>
+				</table>
+			</div>
 
-			<?php } else { ?>
+		<?php } else { ?>
 
-				<div class="inside" style="width:600px;padding: 0;margin-top: 0;">
-					<table class="form-table">
-						<tr style="width:100%;display: none;">
-							<td valign="top" style="padding-left: 0;">
-								<input type="hidden" id="allowTokenAdmin" name="token_type" value="for_user" />								
-							</td>
-						</tr>
-						<tr style="width:100%;display:none" class="cincopa_token_issue_not_admin">
-							<td valign="top" style="background: #ededed;padding: 10px;font-weight: 600;color: #2271b1;">
-								Contact your site admin to fix this issue.
-							</td>
-						</tr>
-					</table>
-				</div>
+			<div class="inside" style="width:600px;padding: 0;margin-top: 0;">
+				<table class="form-table">
+					<tr style="width:100%;display: none;">
+						<td valign="top" style="padding-left: 0;">
+							<input type="hidden" id="allowTokenAdmin" name="token_type" value="for_user" />
+						</td>
+					</tr>
+					<tr style="width:100%;display:none" class="cincopa_token_issue_not_admin">
+						<td valign="top" style="background: #ededed;padding: 10px;font-weight: 600;color: #2271b1;">
+							Contact your site admin to fix this issue.
+						</td>
+					</tr>
+				</table>
+			</div>
 
+		<?php } ?>
+		<span class="cincopa_token_status" style="font-weight: bold;display: block;">Token status - Ok</span>
+		<a class="cincopa_create_token button-primary" href="<?php echo esc_url(cincopa_mp_mt_get_authorize_url()); ?>"
+			style="display:none;margin-top: 10px;">Get token from Cincopa</a>
+		<?php if (is_super_admin()) { ?>
+			<?php if ($token) { ?>
+				<a class="cincopa_delete_token button-primary" style="margin-top: 10px;">Delete token</a>
 			<?php } ?>
-			<span class="cincopa_token_status" style="font-weight: bold;display: block;">Token status - Ok</span>
-			<a class="cincopa_create_token button-primary" href="<?php echo cincopa_mp_mt_get_authorize_url(); ?>" style="display:none;margin-top: 10px;">Get token from Cincopa</a>
-			<?php if (is_super_admin()) { ?>
-				<?php if ($token) { ?>
-					<a class="cincopa_delete_token button-primary" style="margin-top: 10px;">Delete token</a>
-				<?php } ?>
-			<?php } else { ?>
-				<?php if (!$api_token_for_all) { ?>
-					<a class="cincopa_delete_token button-primary" style="margin-top: 10px;">Delete token</a>
-				<?php } ?>
+		<?php } else { ?>
+			<?php if (!$api_token_for_all) { ?>
+				<a class="cincopa_delete_token button-primary" style="margin-top: 10px;">Delete token</a>
 			<?php } ?>
-		</div>
-	<?php }
+		<?php } ?>
+	</div>
+<?php }
 
 
 if (!class_exists('CincopaWidget')) {
@@ -1097,7 +1204,7 @@ if (!class_exists('CincopaWidget')) {
 				$galID = preg_replace(CINCOPA_REGEXP, '$1', $instance['galleryid']);
 				$gallery = cincopa_plugin_shortcode([$galID, $args["widget_id"]], '', 'cincopa'); //  cincopa_mp_plugin($instance['galleryid'],true);	
 			} else {
-				$gallery =  cincopa_plugin_shortcode([$instance['galleryid'], $args["widget_id"]], '', 'cincopa');
+				$gallery = cincopa_plugin_shortcode([$instance['galleryid'], $args["widget_id"]], '', 'cincopa');
 			}
 
 			echo $gallery;
@@ -1116,12 +1223,18 @@ if (!class_exists('CincopaWidget')) {
 				$galleryid = esc_attr($instance['galleryid']);
 			else
 				$galleryid = '';
-	?>
+			?>
 			<p>
-				<label for="" <?php echo $this->get_field_id('galleryid'); ?>"><?php _e('Gallery ID:'); ?> <a target="_blank" href="//help.cincopa.com/entries/405593-how-do-i-add-a-gallery-to-my-wordpress-sidebar?utm_source=wpplugin&utm_medium=whatever&utm_campaign=">what?</a> <input class="widefat" id="" <?php echo $this->get_field_id('galleryid'); ?>" name="<?php echo $this->get_field_name('galleryid'); ?>" type="text" value="<?php echo (esc_html($galleryid)); ?>" />
+				<label
+					for="<?php echo esc_attr($this->get_field_id('galleryid')); ?>"><?php esc_html_e('Gallery ID:', 'cincopa-video-and-media'); ?>
+					<a target="_blank"
+						href="//help.cincopa.com/entries/405593-how-do-i-add-a-gallery-to-my-wordpress-sidebar?utm_source=wpplugin&utm_medium=whatever&utm_campaign=">what?</a>
+					<input class="widefat" id="<?php echo esc_attr($this->get_field_id('galleryid')); ?>"
+						name="<?php echo esc_attr($this->get_field_name('galleryid')); ?>" type="text"
+						value="<?php echo esc_attr($galleryid); ?>" />
 				</label>
 			</p>
-	<?php
+			<?php
 		}
 	} // class CincopaWidget
 
@@ -1171,19 +1284,30 @@ function cincopa_mp_activation_notice()
 { ?>
 	<div id="message" class="updated fade">
 		<p style="line-height: 150%">
-			<a href="//www.cincopa.com/wordpress/welcome?utm_source=wpplugin&utm_medium=whatever" target=_blank><img alt="cincopa" src="https://www.cincopa.com/_cms/design15/icons/favicon-32.png?affdata=wordpress-plugin,welcome-msg" width="15px" /></a>&nbsp;<strong>Welcome to Cincopa Rich Media Plugin</strong> - the most popular way to add videos, photo galleries, slideshows, Cooliris gallery, podcast and music to your site.
+			<a href="//www.cincopa.com/wordpress/welcome?utm_source=wpplugin&utm_medium=whatever" target=_blank><img
+					alt="cincopa"
+					src="https://www.cincopa.com/_cms/design15/icons/favicon-32.png?affdata=wordpress-plugin,welcome-msg"
+					width="15px" /></a>&nbsp;<strong>Welcome to Cincopa Rich Media Plugin</strong> - the most popular way to
+			add videos, photo galleries, slideshows, Cooliris gallery, podcast and music to your site.
 		</p>
 		<p>
-			On every post page (above the text box) you'll find this <img src="<?php echo cincopa_mp_pluginURI() ?>/media-cincopa.gif" /> icon, click on it to start or use sidebar Widgets (Appearance menu).
-			Visit <a href="//www.cincopa.com/wordpress/welcome?utm_source=wpplugin&utm_medium=whatever" target=_blank>Cincopa Welcome Page</a> for more info.
+			On every post page (above the text box) you'll find this <img
+				src="<?php echo esc_url(cincopa_mp_pluginURI()); ?>/media-cincopa.gif" /> icon, click on it to start or use
+			sidebar
+			Widgets (Appearance menu).
+			Visit <a href="//www.cincopa.com/wordpress/welcome?utm_source=wpplugin&utm_medium=whatever"
+				target=_blank>Cincopa Welcome Page</a> for more info.
 		</p>
 		<p>
 
-			<input type="button" class="button" value="Cincopa Options Page" onclick="document.location.href = 'options-general.php?page=cincopaoptions';" />
+			<input type="button" class="button" value="Cincopa Options Page"
+				onclick="document.location.href = 'options-general.php?page=cincopaoptions';" />
 
-			<input type="button" class="button" value="Hide this message" onclick="document.location.href = 'options-general.php?page=cincopaoptions&amp;hide_note=welcome_notice';" />
+			<input type="button" class="button" value="Hide this message"
+				onclick="document.location.href = 'options-general.php?page=cincopaoptions&amp;hide_note=welcome_notice';" />
 
-			<input type="button" class="button" value="Video Tutorial" onclick="window.open('//webinars.cincopa.com/?utm_source=wpplugin&utm_medium=whatever#cat=wordpress');" />
+			<input type="button" class="button" value="Video Tutorial"
+				onclick="window.open('//webinars.cincopa.com/?utm_source=wpplugin&utm_medium=whatever#cat=wordpress');" />
 
 		</p>
 
@@ -1218,121 +1342,131 @@ function cincopa_mediaDefault_script()
 			}
 		}
 	</script>
-<?php
+	<?php
 }
 
 
-function cp_embed_wrapper( $html, $url, $attr, $post_ID ) {
-    $style = '';
+function cp_embed_wrapper($html, $url, $attr, $post_ID)
+{
+	$style = '';
 	$classes = [];
 	if (stripos($url, "cincopa.com") !== FALSE) {
 		$classes[] = 'wp-cp_embed_wrapper';
-		$style='<style>.wp-cp_embed_wrapper iframe{width:100%;height:100%;aspect-ratio:16/9;}</style>';
-    }
+		$style = '<style>.wp-cp_embed_wrapper iframe{width:100%;height:100%;aspect-ratio:16/9;}</style>';
+	}
 
-	return '<div class="' . implode( ' ', $classes ) . '">' . $style . $html . '</div>';
+	return '<div class="' . implode(' ', $classes) . '">' . $style . $html . '</div>';
 }
-add_filter( 'embed_oembed_html', 'cp_embed_wrapper', 10, 4 );
+add_filter('embed_oembed_html', 'cp_embed_wrapper', 10, 4);
 
 
 /* WPBakery Builder Addon */
-function generateRandomFidClass($length = 25) {
-    $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    $charactersLength = strlen($characters);
-    $randomString = '';
-    for ($i = 0; $i < $length; $i++) {
-        $randomString .= $characters[rand(0, $charactersLength - 1)];
-    }
-    return $randomString;
+function generateRandomFidClass($length = 25)
+{
+	$characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+	$charactersLength = strlen($characters);
+	$randomString = '';
+	for ($i = 0; $i < $length; $i++) {
+		$randomString .= $characters[wp_rand(0, $charactersLength - 1)];
+	}
+	return $randomString;
 }
 
-if(function_exists('cincopa_mp_mt_get_authorize_url')){
+if (function_exists('cincopa_mp_mt_get_authorize_url')) {
 	if (function_exists('vc_add_shortcode_param')) {
-		vc_add_shortcode_param( 'insert_button_cincopa', 'insert_gallery_cincopa' );
-		function insert_gallery_cincopa() {
-		return '<button class="btn_insert_from_cincopa">Insert from Cincopa</button>';
+		vc_add_shortcode_param('insert_button_cincopa', 'insert_gallery_cincopa');
+		function insert_gallery_cincopa()
+		{
+			return '<button class="btn_insert_from_cincopa">Insert from Cincopa</button>';
 		}
 
-		vc_add_shortcode_param( 'login_button_cincopa', 'login_cincopa' );
-		function login_cincopa() {
-		return '<button class="btn_login_cincopa">Login to Cincopa</button>';
+		vc_add_shortcode_param('login_button_cincopa', 'login_cincopa');
+		function login_cincopa()
+		{
+			return '<button class="btn_login_cincopa">Login to Cincopa</button>';
 		}
 	}
 
-	add_action('vc_before_init', 'add_cincopa_vidget_vc' );
+	add_action('vc_before_init', 'add_cincopa_vidget_vc');
 
-	function add_cincopa_vidget_vc(){
+	function add_cincopa_vidget_vc()
+	{
 		$token = get_site_option('cincopa_cp_mt_api_token');
 
 		if (!$token) {
 			$token = get_user_meta(get_current_user_id(), 'cincopa_cp_mt_api_token', true);
 		}
 
-		if($token){
-			vc_map( 
+		if ($token) {
+			vc_map(
 				array(
-				"name" => __("Cincopa Gallery", "cincopa_gallery_widget"),    
-				"base" => "cincopa_gallery_widget",      
-				"description" => __("Cincopa video and media plug-in", "cincopa_gallery_widget"),
-				"category" => __("Cincopa", "cincopa_gallery_widget"),
-				"params" => array(
-					array(
-						"type" => "textfield",
-						"holder" => "div",
-						"class" => "input_insert_cincopa",
-						"heading" => esc_html__("Gallery FID", 'cincopa_gallery_widget'),
-						"param_name" => "cincopa-input-insert",
-						"value" => "",
-						"description" => esc_html__("Insert Gallery FID", 'cincopa_gallery_widget')
-					), 
-					array(
-						"type" => 'insert_button_cincopa',
-						"holder" => "div",
-						"heading" => esc_html__("", 'cincopa_gallery_widget'),
-						"param_name" => "cincopa-btn-insert",
-						"value" => "",				
-						"description" => esc_html__("", 'cincopa_gallery_widget')
-					), 
-				)		
+					"name" => __("Cincopa Gallery", "cincopa-video-and-media"),
+					"base" => "cincopa_gallery_widget",
+					"description" => __("Cincopa video and media plug-in", "cincopa-video-and-media"),
+					"category" => __("Cincopa", "cincopa-video-and-media"),
+					"params" => array(
+						array(
+							"type" => "textfield",
+							"holder" => "div",
+							"class" => "input_insert_cincopa",
+							"heading" => esc_html__("Gallery FID", 'cincopa-video-and-media'),
+							"param_name" => "cincopa-input-insert",
+							"value" => "",
+							"description" => esc_html__("Insert Gallery FID", 'cincopa-video-and-media')
+						),
+						array(
+							"type" => 'insert_button_cincopa',
+							"holder" => "div",
+							"heading" => "",
+							"param_name" => "cincopa-btn-insert",
+							"value" => "",
+							"description" => ""
+						),
+					)
 				)
 			);
-		}else{
-			vc_map( 
+		} else {
+			vc_map(
 				array(
-				"name" => __("Cincopa Login", "cincopa_gallery_widget"),    
-				"base" => "cincopa_gallery_widget",      
-				"description" => __("Cincopa video and media plug-in", "cincopa_gallery_widget"),
-				"category" => __("Cincopa", "cincopa_gallery_widget"),
-				"params" => array( 
-					array(
-						"type" => 'login_button_cincopa',
-						"holder" => "div",
-						"heading" => esc_html__("", 'cincopa_gallery_widget'),
-						"param_name" => "login_button_cincopa",
-						"value" => "",				
-						"description" => esc_html__("", 'cincopa_gallery_widget')
-					), 
-				)		
+					"name" => __("Cincopa Login", "cincopa-video-and-media"),
+					"base" => "cincopa_gallery_widget",
+					"description" => __("Cincopa video and media plug-in", "cincopa-video-and-media"),
+					"category" => __("Cincopa", "cincopa-video-and-media"),
+					"params" => array(
+						array(
+							"type" => 'login_button_cincopa',
+							"holder" => "div",
+							"heading" => "",
+							"param_name" => "login_button_cincopa",
+							"value" => "",
+							"description" => ""
+						),
+					)
 				)
 			);
-		}		
+		}
 	}
 
-	add_shortcode('cincopa_gallery_widget','cincopa_gallery_widget_add');
+	add_shortcode('cincopa_gallery_widget', 'cincopa_gallery_widget_add');
 
-	function cincopa_gallery_widget_add($atts){
+	function cincopa_gallery_widget_add($atts)
+	{
 		$random = generateRandomFidClass(10);
-		if(isset($atts['cincopa-input-insert']))$fid=esc_html($atts['cincopa-input-insert']); else $fid='';
-		if($fid !=''){
-		?>
+		if (isset($atts['cincopa-input-insert']))
+			$fid = preg_replace('/[^A-Za-z0-9_@!-]/', '', $atts['cincopa-input-insert']);
+		else
+			$fid = '';
+		if ($fid != '') {
+			wp_enqueue_script('cincopa-runtime-libasync', '//www.cincopa.com/media-platform/runtime/libasync.js');
+			?>
 			<div class="cincopa-gallery-video">
-				<div id="cp_widget_<?php echo $random; ?>"><img src="//www.cincopa.com/media-platform/runtime/loading.gif" style="border:0;" alt="Cincopa WPBakery Addon" /></div>
-				<script src="//www.cincopa.com/media-platform/runtime/libasync.js" type="text/javascript"></script>
+				<div id="cp_widget_<?php echo esc_attr($random); ?>"><img src="//www.cincopa.com/media-platform/runtime/loading.gif"
+						style="border:0;" alt="Cincopa WPBakery Addon" /></div>
 				<script type="text/javascript">
-					cp_load_widget('<?php echo $fid; ?>', "cp_widget_<?php echo $random; ?>");
+					cp_load_widget('<?php echo esc_js($fid); ?>', "cp_widget_<?php echo esc_js($random); ?>");
 				</script>
 			</div>
-		<?php
+			<?php
 		}
 	}
 }
@@ -1342,110 +1476,119 @@ if(function_exists('cincopa_mp_mt_get_authorize_url')){
 
 /* Recommends Plugins */
 
-add_action( 'tgmpa_register', 'cincopa_mp__register_required_plugins' );
+add_action('tgmpa_register', 'cincopa_mp__register_required_plugins');
 
-function cincopa_mp__register_required_plugins() {
+function cincopa_mp__register_required_plugins()
+{
 	$plugins = [];
 
-	if (is_plugin_active( 'elementor/elementor.php' )) {
+	if (is_plugin_active('elementor/elementor.php')) {
 		$plugins[] = [
-			'name'               => 'Elementor Addon - Cincopa video and media plugin',
-			'slug'               => 'elementor-addon',
-			'source'             => dirname( __FILE__ ) . '/addons/elementor-addon-1.1.zip',
-			'required'           => false,
-			'version'            => '1.1',
-			'force_activation'   => false,
+			'name' => 'Elementor Addon - Cincopa video and media plugin',
+			'slug' => 'elementor-addon',
+			'source' => dirname(__FILE__) . '/addons/elementor-addon-1.1.zip',
+			'required' => false,
+			'version' => '1.1',
+			'force_activation' => false,
 			'force_deactivation' => false,
-			'external_url'       => '',
-			'is_callable'        => '',
+			'external_url' => '',
+			'is_callable' => '',
 		];
 	}
 
-	if(is_plugin_active('oxygen/functions.php')) {
-		
+	if (is_plugin_active('oxygen/functions.php')) {
+
 		$plugins[] = [
-				'name'               => 'Oxygen Addon - Cincopa video and media plugin',
-				'slug'               => 'oxygen-cincopa-addon',
-				'source'             => dirname( __FILE__ ) . '/addons/oxygen-cincopa-addon-1.0.zip',
-				'required'           => false,
-				'version'            => '1.0',
-				'force_activation'   => false,
-				'force_deactivation' => false,
-				'external_url'       => '',
-				'is_callable'        => '',
+			'name' => 'Oxygen Addon - Cincopa video and media plugin',
+			'slug' => 'oxygen-cincopa-addon',
+			'source' => dirname(__FILE__) . '/addons/oxygen-cincopa-addon-1.0.zip',
+			'required' => false,
+			'version' => '1.0',
+			'force_activation' => false,
+			'force_deactivation' => false,
+			'external_url' => '',
+			'is_callable' => '',
 		];
 	}
 
 	$config = array(
-		'id'           => 'cincopa-video-and-media',
+		'id' => 'cincopa-video-and-media',
 		'default_path' => '',
-		'menu'         => 'tgmpa-install-plugins',
-		'parent_slug'  => 'plugins.php',
-		'capability'   => 'manage_options',
-		'has_notices'  => true,
-		'dismissable'  => true,
-		'dismiss_msg'  => '',
+		'menu' => 'tgmpa-install-plugins',
+		'parent_slug' => 'plugins.php',
+		'capability' => 'manage_options',
+		'has_notices' => true,
+		'dismissable' => true,
+		'dismiss_msg' => '',
 		'is_automatic' => false,
-		'message'      => '',
+		'message' => '',
 		'strings' => array(
-			'notice_can_install_required'     => _n_noop(
+			/* translators: %1$s: plugin name */
+			'notice_can_install_required' => _n_noop(
 				'This plugin requires the following plugin: %1$s.',
 				'This plugin requires the following plugins: %1$s.',
 				'cincopa-video-and-media'
 			),
-			'notice_can_install_recommended'  => _n_noop(
+			/* translators: %1$s: plugin name */
+			'notice_can_install_recommended' => _n_noop(
 				'This plugin recommends the following plugin: %1$s.',
 				'This plugin recommends the following plugins: %1$s.',
 				'cincopa-video-and-media'
 			),
-			'notice_ask_to_update'            => _n_noop(
+			/* translators: %1$s: plugin name */
+			'notice_ask_to_update' => _n_noop(
 				'The following plugin needs to be updated to its latest version to ensure maximum compatibility with this theme: %1$s.',
 				'The following plugins need to be updated to their latest version to ensure maximum compatibility with this theme: %1$s.',
 				'cincopa-video-and-media'
 			),
-			'notice_ask_to_update_maybe'      => _n_noop(
+			/* translators: %1$s: plugin name */
+			'notice_ask_to_update_maybe' => _n_noop(
 				'There is an update available for: %1$s.',
 				'There are updates available for the following plugins: %1$s.',
 				'cincopa-video-and-media'
 			),
-			'notice_can_activate_required'    => _n_noop(
+			/* translators: %1$s: plugin name */
+			'notice_can_activate_required' => _n_noop(
 				'The following required plugin is currently inactive: %1$s.',
 				'The following required plugins are currently inactive: %1$s.',
 				'cincopa-video-and-media'
 			),
+			/* translators: %1$s: plugin name */
 			'notice_can_activate_recommended' => _n_noop(
 				'The following recommended plugin is currently inactive: %1$s.',
 				'The following recommended plugins are currently inactive: %1$s.',
 				'cincopa-video-and-media'
-			),			
-			'install_link'                    => _n_noop(
+			),
+			'install_link' => _n_noop(
 				'Begin installing plugin',
 				'Begin installing plugins',
 				'cincopa-video-and-media'
 			),
-			'update_link' 					  => _n_noop(
+			'update_link' => _n_noop(
 				'Begin updating plugin',
 				'Begin updating plugins',
 				'cincopa-video-and-media'
 			),
-			'activate_link'                   => _n_noop(
+			'activate_link' => _n_noop(
 				'Begin activating plugin',
 				'Begin activating plugins',
 				'cincopa-video-and-media'
 			),
-			'return'                          => __( 'Return to Required Plugins Installer', 'cincopa-video-and-media' ),
-			'plugin_activated'                => __( 'Plugin activated successfully.', 'cincopa-video-and-media' ),
-			'activated_successfully'          => __( 'The following plugin was activated successfully:', 'cincopa-video-and-media' ),
-			'plugin_already_active'           => __( 'No action taken. Plugin %1$s was already active.', 'cincopa-video-and-media' ),
-			'complete'                        => __( 'All plugins installed and activated successfully. %1$s', 'cincopa-video-and-media' ),
-			'dismiss'                         => __( 'Dismiss this notice', 'cincopa-video-and-media' ),
-			'notice_cannot_install_activate'  => __( 'There are one or more required or recommended plugins to install, update or activate.', 'cincopa-video-and-media' ),
-			'contact_admin'                   => __( 'Please contact the administrator of this site for help.', 'cincopa-video-and-media' ),
-			'nag_type'                        => '', 
+			'return' => __('Return to Required Plugins Installer', 'cincopa-video-and-media'),
+			'plugin_activated' => __('Plugin activated successfully.', 'cincopa-video-and-media'),
+			'activated_successfully' => __('The following plugin was activated successfully:', 'cincopa-video-and-media'),
+			/* translators: %1$s: plugin name */
+			'plugin_already_active' => __('No action taken. Plugin %1$s was already active.', 'cincopa-video-and-media'),
+			/* translators: %1$s: dashboard link */
+			'complete' => __('All plugins installed and activated successfully. %1$s', 'cincopa-video-and-media'),
+			'dismiss' => __('Dismiss this notice', 'cincopa-video-and-media'),
+			'notice_cannot_install_activate' => __('There are one or more required or recommended plugins to install, update or activate.', 'cincopa-video-and-media'),
+			'contact_admin' => __('Please contact the administrator of this site for help.', 'cincopa-video-and-media'),
+			'nag_type' => '',
 		)
 	);
 
-	tgmpa( $plugins, $config );
+	tgmpa($plugins, $config);
 }
 
 /* Recommends Plugins */

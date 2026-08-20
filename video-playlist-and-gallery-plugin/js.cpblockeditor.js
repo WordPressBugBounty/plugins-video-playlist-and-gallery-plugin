@@ -11,6 +11,74 @@ if(cp_token=="undefined" || !cp_token) {
   isToken = false;
 }
 
+function getAdminDocument() {
+  var currWin = window;
+  while (currWin) {
+    try {
+      if (currWin.document && currWin.document.querySelector("#wpwrap")) {
+        return currWin.document;
+      }
+    } catch (e) {}
+    if (currWin === currWin.parent) {
+      break;
+    }
+    currWin = currWin.parent;
+  }
+  return document;
+}
+
+function getAllDocuments() {
+  var docs = [document];
+  var currWin = window;
+  while (currWin && currWin !== currWin.parent) {
+    currWin = currWin.parent;
+    try {
+      if (currWin.document && docs.indexOf(currWin.document) === -1) {
+        docs.push(currWin.document);
+      }
+    } catch (e) {}
+  }
+  var len = docs.length;
+  for (var i = 0; i < len; i++) {
+    try {
+      var iframes = docs[i].querySelectorAll('iframe');
+      for (var j = 0; j < iframes.length; j++) {
+        var iframe = iframes[j];
+        try {
+          if (iframe.contentDocument && docs.indexOf(iframe.contentDocument) === -1) {
+            docs.push(iframe.contentDocument);
+          }
+        } catch (e) {}
+      }
+    } catch (e) {}
+  }
+  return docs;
+}
+
+function addMessageListener(listener) {
+  window.addEventListener("message", listener, false);
+  getAllDocuments().forEach(function(doc) {
+    var win = doc.defaultView;
+    if (win && win !== window) {
+      try {
+        win.addEventListener("message", listener, false);
+      } catch (e) {}
+    }
+  });
+}
+
+function removeMessageListener(listener) {
+  window.removeEventListener("message", listener, false);
+  getAllDocuments().forEach(function(doc) {
+    var win = doc.defaultView;
+    if (win && win !== window) {
+      try {
+        win.removeEventListener("message", listener, false);
+      } catch (e) {}
+    }
+  });
+}
+
 function checkLoginStatus(options) {
   if (cp_user_status) {
     if (typeof options.success === "function") {
@@ -101,25 +169,30 @@ function Preview(props) {
     if (!idToRender) {
       return;
     }
-    var allcontainers = document.querySelectorAll('.gallerydemo:not(.cp-gallery-activated)');
+    var allcontainers = [];
+    getAllDocuments().forEach(function(doc) {
+      var found = doc.querySelectorAll('.gallerydemo:not(.cp-gallery-activated)');
+      found.forEach(function(el) {
+        allcontainers.push(el);
+      });
+    });
 
     allcontainers.forEach(function(container) {
       container.innerHTML = '';
-      if(window.cincopa){
+      var containerDoc = container.ownerDocument;
+      var containerWindow = containerDoc.defaultView;
+      if (containerWindow && containerWindow.cincopa) {
         setTimeout(function() {
-          window.cincopa.boot_all();
-        },100);
+          containerWindow.cincopa.boot_all();
+        }, 100);
       }
-    });  
-    if (!document.getElementById('cplibasyncjs')) {
-      var libasyncjs = document.createElement('script');
-      libasyncjs.id = 'cplibasyncjs';
-      libasyncjs.setAttribute(
-        'src',
-        'https://rtcdn.cincopa.com/libasync.js');
-        document.body.appendChild(libasyncjs);
-    }
-          
+      if (!containerDoc.getElementById('cplibasyncjs')) {
+        var libasyncjs = containerDoc.createElement('script');
+        libasyncjs.id = 'cplibasyncjs';
+        libasyncjs.setAttribute('src', 'https://rtcdn.cincopa.com/libasync.js');
+        containerDoc.body.appendChild(libasyncjs);
+      }
+    });          
   }
 
 
@@ -143,6 +216,7 @@ var defaultEmbed = {};
 LibraryEditor.prototype = Object.create(React.Component.prototype);
 
 function LibraryEditor(props) {
+  React.Component.constructor.call(this);
   var self = this;
 
 
@@ -153,29 +227,82 @@ function LibraryEditor(props) {
     fid: !props?.wpprops?.attributes?.content?.includes("!") ? props?.wpprops?.attributes?.content : ''
   };
 
-  var tokenPopup = document.createElement('div');
-    tokenPopup.className = 'token-popup'
-    tokenPopup.innerHTML = `<div class="token-popup-header">
-                              <a class="token-popup-header-close">
-                                <img src="//wwwcdn.cincopa.com/_cms/design18/images/close.svg">
-                              </a>
-                            </div>
-                            <p>Connect with Cincopa to use this feature</p>
-                            <a href="${cp_site_url}/wp-admin/options-general.php?page=cincopaoptions" class="cp_button cp_button-connect">Connect</a>
-                            `
-
   self.openLibraryEditor = function () {
-    if( !self.props.isLoggedin && !isToken && !document.querySelector(".token-popup") ){
-      document.body.append(tokenPopup);
-      document.querySelector("#wpwrap").classList.add('cp-disabled')
+    var adminDoc = getAdminDocument();
+    if( !self.props.isLoggedin && !isToken && !adminDoc.querySelector(".token-popup") ){
+      if (!adminDoc.getElementById('cp-blockeditor-parent-styles')) {
+        var style = adminDoc.createElement('style');
+        style.id = 'cp-blockeditor-parent-styles';
+        style.appendChild(adminDoc.createTextNode(`
+          .token-popup {
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              justify-content: flex-start;
+              position: fixed;
+              width: 500px;
+              height: 200px;
+              top: 50%;
+              left: calc(50% - 250px);
+              background-color: #fff;
+              border: 1px solid;
+              padding: 10px;
+              box-shadow: 2px 2px #888888;
+              padding: 4px;
+              z-index: 100000;
+          }
+          .token-popup .token-popup-header {
+              width: 100%;
+          }
+          .token-popup .token-popup-header-close {
+              position: absolute;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              width: 30px;
+              height: 30px;
+              right: 0;
+              cursor: pointer;
+          }
+          .token-popup p {
+              color: #000;
+              font-size: 20px;
+              font-weight: 500;
+              margin-top: 60px;
+          }
+          .cp-disabled {
+              pointer-events: none;
+              opacity: 0.5;
+          }
+        `));
+        adminDoc.head.appendChild(style);
+      }
 
-      tokenPopup.querySelector("a").onclick = () => {
-        tokenPopup.remove();
-        document.querySelector("#wpwrap").classList.remove('cp-disabled')
+      var localTokenPopup = adminDoc.createElement('div');
+      localTokenPopup.className = 'token-popup';
+      localTokenPopup.innerHTML = `<div class="token-popup-header">
+                                    <a class="token-popup-header-close">
+                                      <img src="//wwwcdn.cincopa.com/_cms/design18/images/close.svg">
+                                    </a>
+                                  </div>
+                                  <p>Connect with Cincopa to use this feature</p>
+                                  <a href="${cp_site_url}/wp-admin/options-general.php?page=cincopaoptions" class="cp_button cp_button-connect">Connect</a>
+                                  `;
+      adminDoc.body.append(localTokenPopup);
+      var wpWrapEl = adminDoc.querySelector("#wpwrap");
+      if (wpWrapEl) {
+        wpWrapEl.classList.add('cp-disabled');
+      }
+
+      localTokenPopup.querySelector("a").onclick = () => {
+        localTokenPopup.remove();
+        if (wpWrapEl) {
+          wpWrapEl.classList.remove('cp-disabled');
+        }
       }
     }else{
       self.setState(prev => ({...prev,show:true, showInputsIframe: false}))
-      window.addEventListener("message", receiveMessage, false);
+      addMessageListener(receiveMessage);
     }
   }
 
@@ -211,7 +338,7 @@ function LibraryEditor(props) {
     self.setState({
       show: false
     })
-    window.removeEventListener("message", receiveMessage, false);
+    removeMessageListener(receiveMessage);
   }
 
   self.componentDidUpdate = function (prevProps) {
@@ -224,7 +351,7 @@ function LibraryEditor(props) {
 
   function receiveMessage(event) {
 
-    if (event.data && event.data.sender == 'cincopa-assets-iframe' && self.props.wpprops.isSelected) {
+    if (event.data && event.data.sender == 'cincopa-assets-iframe' && (self.props.wpprops.isSelected || self.state.show)) {
       if (event.data.action == 'insertedItem' || event.data.action == 'insertedGallery') {
         defaultEmbed = event.data.defaults;
         self.closeLibraryEditor();
