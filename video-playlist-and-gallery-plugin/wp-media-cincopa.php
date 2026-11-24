@@ -8,7 +8,7 @@ Plugin Name: Cincopa video and media plug-in
 Plugin URI: https://www.cincopa.com/media-platform/wordpress-plugin.aspx
 Description: Post rich videos and photos galleries from your cincopa account
 Author: Cincopa 
-Version: 1.165
+Version: 1.167
 Text Domain: cincopa-video-and-media
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -18,7 +18,7 @@ require_once dirname(__FILE__) . '/class-tgm-plugin-activation.php';
 
 function cincopa_mp_plugin_ver()
 {
-	return 'wp1.165';
+	return 'wp1.167';
 }
 
 function cincopa_mp_url()

@@ -3,88 +3,58 @@ Contributors: nicashmu
 Tags: gallery, slideshow, media, video, photos
 Requires at least: 5.0
 Tested up to: 7.0
-Stable tag: 1.165
+Stable tag: 1.167
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Post your videos, photo galleries, slideshows, music and playlists easily and in seconds.
+Host and share videos on WordPress with customizable players and galleries. With VideoGPT, make videos and documents searchable.
 
 == Description ==
 
-No need for multiple plugins for your WordPress media. Cincopa is **The only plugin you need for all your media needs**. Use Cincopa to easily add videos, photo galleries, slideshows, music and playlists and much more. Enjoy more than 100 designed templates for slideshows, video players, Cooliris, Lightbox and many more.
+Host and share videos on WordPress with customizable players, responsive galleries, access controls, and engagement analytics. With VideoGPT, make your recordings and documents searchable so visitors can ask questions, get answers from your content, and find relevant sources.
 
-* **HASSLE-FREE** WordPress media support for your site, include **Videos**, **Slideshows**, **Image Galleries**, **Audio playlists and podcasts**. 
+= Video Hosting: Manage and Share Your Videos =
 
-* **Responsive design and HTML5** to ensure compatibility with mobile phones, tablets as well as desktops. Your audience is mobile more than ever, our technology will make sure that they can access your content anywhere and any time.
+Upload, host, and organize your video library through Cincopa, then publish it on WordPress using customizable players and responsive galleries. Create individual video embeds or playlists for product demonstrations, training sessions, customer stories, and support content.
 
-* **SEO Boost** Our unique JSON-LD support will expose and boost your content ranking in Google SERP,  [Read more](//www.cincopa.com/learn/smarter-seo-with-cincopas-json-ld/)
+Adjust layouts, colors, thumbnails, and player branding to match your website. Add titles, descriptions, and captions to make recordings easier to browse and follow across desktop, tablet, and mobile devices.
 
-* **Expert WordPress Support** - full [technical support](//help.cincopa.com/home), many [tutorials](//help.cincopa.com/categories/9559-media-platform-guides-tutorials) and [video tutorials](//help.cincopa.com/forums/376513-video-tutorials) to get you started.
+Cincopa handles video processing, hosting, and delivery without using your WordPress media storage. Access controls and domain restrictions help you manage where content can be viewed, while engagement analytics show how audiences interact with your videos. Available options depend on your plan and configuration.
 
+= VideoGPT: Your AI Assistant for Videos and Documents =
 
-Read more about [Cincopa WordPress Media Plugin](//www.cincopa.com/media-platform/wordpress-plugin.aspx)
+[VideoGPT](https://www.cincopa.com/platform/videogpt) is Cincopa's AI intelligence layer. Viewers can ask questions across the videos and documents in a collection and receive answers grounded in the available content.
 
+Welcome messages and suggested starter questions help visitors understand what they can find. Answers connect them with relevant sources, including specific video moments when timestamped transcripts are available. Follow-up questions guide further exploration.
 
--About Cincopa-
+Question insights help your team identify recurring needs, unclear explanations, and knowledge gaps, so you can decide which content to improve or create next.
 
-Cincopa was founded in 2006 with the mission of providing business with the advanced capabilities to Market, Teach and Engage through the use video, images and audio.
-Although we have become an established company at our core lies the spirit of a startup.
-Over the years we have been successful in developing and providing the most advanced enterprise media hosting solutions for a variety of industries and verticals including Governmental organizations, 
-Learning institutions and Media companies such as Pfizer, Euronews, Salvation Army, Dell, CNN, US State Dept and Worldpay.
-Some of the advanced features and empowering capabilities we have innovated and provide are solutions such as:
+= Built for Knowledge Sharing =
 
-Video hosting for LMS and Sharepoint for spreading knowledge and measuring learning
-Video solutions for Onboarding, Training and Internal communication
-Marketing and Communications videos that drive demand and convert viewers while feeding vital analytics to your marketing stack
-Video solutions for Sales that win more deals
-We understand the importance of collaboration, that's why Cincopa seamlessly integrates with any platform using Powerful APIs to build workflows and applications.
-
-[Cincopa Terms of Use](https://www.cincopa.com/legal-stuff)
-[Cincopa Privacy Policy](https://www.cincopa.com/privacy-policy)
-
+* **[Product education](https://www.cincopa.com/solutions/product-education):** Help customers understand features and complete workflows.
+* **[Support and troubleshooting](https://www.cincopa.com/solutions/support-troubleshooting):** Connect questions with relevant explanations and demonstrations.
+* **[Training](https://www.cincopa.com/learn/video-training-portal):** Make recorded lessons and supporting materials easier to revisit.
+* **[Internal knowledge](https://www.cincopa.com/solutions/internal-knowledge-base-software):** Preserve expertise and share procedures through appropriately protected collections.
+* **[Partner enablement](https://www.cincopa.com/solutions/partner-enablement):** Give partners access to product guidance and training resources.
 
 = Features =
 
-* **[more than 100 templates](//www.cincopa.com/media-platform/skins)** - slideshows, video players, playlists, full-screen, Cooliris, lightbox, wedding templates and many more
-* Many customization options: size, colors, text and more
-* Simple media management directly from your WordPress dashboard
-* Automatic **resizing of photos**
-* **Automatic uploading and hosting**
-* Automatic **video transcoding** to flv/3gp/mp4
-* Supported file types - avi, mov, wmv, mp4, m4a, f4a, f4b, f4v, f4p, m2ts, mts, DVD vob, mkv, rmvb, m1v, qt, div, divx, dv, 3gp, 3gpp, 3g2, mpg, mpeg, mpe, flv, wav, wma
-* Complete analytics of your traffic
-* Support iPhone, iPad, Android, blackberry automatically and other smart and mobile phones
-* Hosting and delivering your media on Amazon S3 Web Services ensure scalability and reliability.
-* Video hosting, video serving, video streaming and pseudo streaming (progressive download) solutions
-* Many types of players to choose from including JW, flowplay, Cooliris and others
-* Support playlist with customizable side, bottom and top list using CSS
-* Add caption and description to any item
-* Integrates with your CDN solution
-* Management tool to allow your users/designers/web master to upload videos
-* Embed code button directly into article
-* Progressive Download (Pseudo streaming - httpd)
-* HD widescreen flv and H.264, ideal for videoblog and photoblog
-* Preview image in 4 sizes (for first frame of video).
-* Full Screen feature.
-* Domain lock feature to protect your video
-* Support HTTPS (SSL) sites
-* Download source feature
-* On screen Logo for branding
-* Google analytics Tracking Enabled
-* Support other CMS systems and public web sites
-* Post to your blog from anywhere and even if your videos are at home on your PC
-* The plugin is FREE, we do offer a [pro account](//www.cincopa.com/cincopamanager/paypal/plans.aspx) with even more options.
+* Embed galleries using the Cincopa Video & Image Gallery block.
+* Publish videos, images, audio, and supporting documents in compatible galleries.
+* Customize responsive gallery layouts and player branding.
+* Host, manage, and deliver media through Cincopa.
+* Enable VideoGPT in supported collections.
+* Access transcription, auto-generated captions, engagement analytics, and security options according to your plan.
 
+= About Cincopa =
 
-Thousands of site are already using Cincopa, [Start now for free](//downloads.wordpress.org/plugin/video-playlist-and-gallery-plugin.zip) and add media to your WordPress site in seconds.
+Founded in 2006, Cincopa is a Video Knowledge Platform that helps organizations make existing videos and documents searchable, accessible, and useful.
 
+Trusted by organizations including Verily, Chamberlain, and Leidos, Cincopa brings together Galleries, Pages, Tube, and VideoGPT for customer education, training, support, internal knowledge sharing, and partner enablement.
 
-Get more information about [Cincopa WordPress Media Plugin](//www.cincopa.com/media-platform/wordpress-plugin.aspx) and see some examples.
+Teams can publish the knowledge they already have, help audiences find answers, and use real questions to guide content improvements.
 
-For comments, questions and support use this email [support@cincopa.com](mailto:support@cincopa.com)
-
-<h4>Buddypress and wpmu</h4>
-Ideal multimedia solution for BuddyPress and mu because each user gets his own private storage space with zero cost to site owner. 
+[Explore Cincopa](https://www.cincopa.com/) | [VideoGPT](https://www.cincopa.com/platform/videogpt) | [Pricing](https://www.cincopa.com/pricing)
 
 
 == Installation ==
@@ -100,50 +70,43 @@ Ideal multimedia solution for BuddyPress and mu because each user gets his own p
 
 == Frequently Asked Questions ==
 
-= What about non-WordPress sites/blogs ? =
+= Do I need a Cincopa account? =
 
-You can also embed your gallery in other sites/blogs using a HTML code. To create your gallery start here http://www.cincopa.com/media-platform/start.aspx and follow the instructions.
+Yes. Your account hosts and manages the content displayed through the plugin.
 
-= How much storage do I need to post videos and photos ? =
+= Is the plugin free? =
 
-None, You don't need any space on your server, your files will be stored on Cincopa server.
+The plugin is free to install. Cincopa service features, storage, and delivery allowances depend on your plan. See [Cincopa pricing](https://www.cincopa.com/pricing).
 
-= How many photos and videos I can post ? =
+= Can visitors ask questions about my content? =
 
-A lot, really.
+Yes, when VideoGPT is enabled in a supported gallery. Answers draw on the collection's available videos, documents, and related source information.
 
-= What is a template ? =
+= Where are my files hosted? =
 
-After you select photos and videos for your post you need to select the style of how to display them, there are a lot of styles available, some good for playing many videos, some good for slideshows, some for music playlists etc.
+Files uploaded to Cincopa are hosted and delivered through the Cincopa service.
 
-= How do I post my photos/videos ? =
+= Can I protect my content? =
 
-In the post page, just click on the C icon and follow the instructions.
+Cincopa offers access controls and domain restrictions to help you manage who can view your content and where it can be embedded. Available security options depend on your plan and configuration. Learn more about [secure video hosting](https://www.cincopa.com/secure-video-hosting).
 
-= Do I need to upload my videos/photos to the server before starting ? =
+= Where can I get help? =
 
-No. Cincopa agent will do it for you after you've completed the post or you can batch upload it.
+Visit the [Cincopa Help Center](https://www.cincopa.com/help/) or email [support@cincopa.com](mailto:support@cincopa.com).
 
-= Do I need to register with Cincopa ? =
+== Service Requirements ==
 
-Yes. After clicking the C icon in the post page follow the instructions to register with Cincopa.
-
-= Why can't I use my server ? =
-
-If you are using one of those low cost shared hosting solution then you better let Cincopa do the media hosting for you. Your hosting is perfect for hosting your site but they are not optimized to serve your videos, photos or music. Combining your hosting solution with Cincopa will render a professional site.
-
+A Cincopa account is required. The plugin loads embedded content from Cincopa's external service. Features and usage allowances depend on your plan.
 
 == Screenshots ==
 
-1. Video Player - full solution to play video and playlists
-2. Image gallery - support images and videos in same gallery
-3. Image list pinterest - styled gallery with lightbox - support video players
-4. Audio mobile - compatible with mobile and tablets - ipad, iphone, android etc
-5. Audio playlist
-6. Ligthbox
-7. Start page
-8. Video gallery
-9. Video playlist
-10. Cincopa fast access button
-11. Cincopa fast access menu
-12. Image list preview
+1. Video gallery with a hero banner and "Start Watching" button
+2. Video player with VideoGPT chat, playlist and additional resources
+3. Video gallery with categories, search and a playlist grid
+4. Video course with playlist, lesson durations and downloadable resources
+5. Playlist with VideoGPT assistant answering questions about your content
+6. Choose a template - popular gallery and player templates
+7. Cincopa dashboard - quick upload, templates and analytics highlights
+8. Asset info - title, description and metadata for a media asset
+9. AI transcripts and subtitles - captions and transcripts management
+10. AI transcripts and subtitles - languages and transcription options
